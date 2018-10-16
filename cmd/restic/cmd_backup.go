@@ -80,6 +80,7 @@ type BackupOptions struct {
 	WithAtime        bool
 	RootPrefix       string
 	RootStrip        int
+	IgnoreInode      bool
 }
 
 var backupOptions BackupOptions
@@ -108,6 +109,7 @@ func init() {
 	f.BoolVar(&backupOptions.WithAtime, "with-atime", false, "store the atime for all files and directories")
 	f.StringVar(&backupOptions.RootPrefix, "prefix", "", "apply a prefix to target paths")
 	f.IntVar(&backupOptions.RootStrip, "strip-components", 0, "strip `n` leading components from target paths")
+	f.BoolVar(&backupOptions.IgnoreInode, "ignore-inode", false, "ignore inode number changes when checking for modified files")
 }
 
 // filterExisting returns a slice of all existing items, or an error if no
@@ -507,6 +509,9 @@ func runBackup(opts BackupOptions, gopts GlobalOptions, term *termstatus.Termina
 		ParentSnapshot: *parentSnapshotID,
 		RootPrefix:     opts.RootPrefix,
 		RootStrip:      opts.RootStrip,
+		ModIgnores: archiver.ModifiedIgnores{
+			Inode: opts.IgnoreInode,
+		},
 	}
 
 	uploader := archiver.IndexUploader{
